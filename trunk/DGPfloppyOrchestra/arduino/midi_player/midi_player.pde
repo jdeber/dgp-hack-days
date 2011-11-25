@@ -96,6 +96,8 @@ void setup() {
   }
 
   MIDI.begin();            	// Launch MIDI with default options
+  Serial.end();
+  Serial.begin(38400);
   // (input channel is default set to 1)
 }
 
@@ -105,6 +107,7 @@ unsigned long time = 0;
 
 void loop () {
   if (MIDI.read()) {     // Is there a MIDI message incoming ?
+//    digitalWrite(LED, HIGH);
     ProcessIO();
   }
   interruptCode();
@@ -113,11 +116,11 @@ void loop () {
 
 void interruptCode(){
 
-  if( Generator[0].Active == true )
+  if( Generator[2].Active == true )
   {
-    if(micros() >= Generator[0].Timer )
+    if(micros() >= Generator[2].Timer )
     {
-      Generator[0].Timer = micros() + Generator[0].Period;
+      Generator[2].Timer = micros() + Generator[2].Period * 10;
 
       digitalWrite(D1_SELECT, LOW);
       delayMicroseconds(8);
@@ -140,9 +143,13 @@ void interruptCode(){
 
   if( Generator[1].Active == true )
   {
+           
+          
+        
     if(micros() >= Generator[1].Timer )
     {
-      Generator[1].Timer = micros() + Generator[1].Period;
+ 
+      Generator[1].Timer = micros() + Generator[1].Period * 10;
 
       digitalWrite(D2_SELECT, LOW);
       delayMicroseconds(8);
@@ -161,53 +168,53 @@ void interruptCode(){
     digitalWrite(D2_SELECT, HIGH);
   }
 
-  // drive 3
-  if( Generator[2].Active == true )
-  {
-    if(micros() >= Generator[2].Timer )
-    {
-      Generator[2].Timer = micros() + Generator[2].Period;
-
-      digitalWrite(D3_SELECT, LOW);
-      delayMicroseconds(8);
-      digitalWrite(D3_STEP, LOW);
-      delayMicroseconds(8);
-      digitalWrite(D3_STEP, HIGH);
-      delayMicroseconds(4);
-      if(direction_val){
-        digitalWrite(D3_DIRECTION, HIGH);
-      } else {
-        digitalWrite(D3_DIRECTION, LOW);
-      }
-      direction_val = !direction_val;
-    }
-  } else {
-    digitalWrite(D3_SELECT, HIGH);
-  }
+//  // drive 3
+//  if( Generator[2].Active == true )
+//  {
+//    if(micros() >= Generator[2].Timer )
+//    {
+//      Generator[2].Timer = micros() + Generator[2].Period * 10;
+//
+//      digitalWrite(D3_SELECT, LOW);
+//      delayMicroseconds(8);
+//      digitalWrite(D3_STEP, LOW);
+//      delayMicroseconds(8);
+//      digitalWrite(D3_STEP, HIGH);
+//      delayMicroseconds(4);
+//      if(direction_val){
+//        digitalWrite(D3_DIRECTION, HIGH);
+//      } else {
+//        digitalWrite(D3_DIRECTION, LOW);
+//      }
+//      direction_val = !direction_val;
+//    }
+//  } else {
+//    digitalWrite(D3_SELECT, HIGH);
+//  }
 
   // drive 4
-  if( Generator[3].Active == true )
-  {
-    if(micros() >= Generator[3].Timer )
-    {
-      Generator[3].Timer = micros() + Generator[3].Period;
-
-      digitalWrite(D4_SELECT, LOW);
-      delayMicroseconds(8);
-      digitalWrite(D4_STEP, LOW);
-      delayMicroseconds(8);
-      digitalWrite(D4_STEP, HIGH);
-      delayMicroseconds(4);
-      if(direction_val){
-        digitalWrite(D4_DIRECTION, HIGH);
-      } else {
-        digitalWrite(D4_DIRECTION, LOW);
-      }
-      direction_val = !direction_val;
-    }
-  } else {
-    digitalWrite(D4_SELECT, HIGH);
-  }
+//  if( Generator[3].Active == true )
+//  {
+//    if(micros() >= Generator[3].Timer )
+//    {
+//      Generator[3].Timer = micros() + Generator[3].Period * 10;
+//
+//      digitalWrite(D4_SELECT, LOW);
+//      delayMicroseconds(8);
+//      digitalWrite(D4_STEP, LOW);
+//      delayMicroseconds(8);
+//      digitalWrite(D4_STEP, HIGH);
+//      delayMicroseconds(4);
+//      if(direction_val){
+//        digitalWrite(D4_DIRECTION, HIGH);
+//      } else {
+//        digitalWrite(D4_DIRECTION, LOW);
+//      }
+//      direction_val = !direction_val;
+//    }
+//  } else {
+//    digitalWrite(D4_SELECT, HIGH);
+//  }
 }
 /********************************************************************
  * Function:        void ProcessIO(void)
@@ -239,12 +246,13 @@ void ProcessIO()
   boolean duplicate_note = false;
   float bent_note;
   unsigned char bend_value;
+//  digitalWrite(LED, HIGH);  
   switch(MIDI.getType()) {
-
+  
   case NoteOn:
-
     if(note_stealing)
     {
+      
       // Note stealing logic: find the channel with the lowest steal counter,
       // and reassign it to the newest note on command. In the event of a
       // tie, channel order decides.
@@ -273,13 +281,14 @@ void ProcessIO()
       {
         Generator[oldest_channel].MidiNote = note;
         Generator[oldest_channel].Period = NotePeriod[note];
-        Generator[channel].Timer = micros() + Generator[channel].Period;
+        Generator[channel].Timer = micros() + Generator[channel].Period * 10;
         Generator[oldest_channel].StealTimer = 0xFFFFFFFF;
         Generator[oldest_channel].Active = true;
       }
     }
     else
     {
+      
       note = MIDI.getData1();
       channel = MIDI.getChannel();
 
@@ -287,7 +296,7 @@ void ProcessIO()
       {
         Generator[channel].MidiNote = note;
         Generator[channel].Period = NotePeriod[note];
-        Generator[channel].Timer = micros() + Generator[channel].Period;
+        Generator[channel].Timer = micros() + Generator[channel].Period*10;
         Generator[channel].Active = true;
       }
     }
@@ -295,7 +304,6 @@ void ProcessIO()
     break;
 
   case NoteOff:
-
     if(note_stealing)
     {
       channel = MIDI.getChannel();
@@ -311,7 +319,7 @@ void ProcessIO()
         break;
       }
 
-    }
+    }  
     else
     {
       note = MIDI.getData1();
@@ -400,13 +408,14 @@ void ProcessIO()
         }
 
         Generator[channel].Period = bent_note;
-        Generator[channel].Timer = micros() + Generator[channel].Period;
+        Generator[channel].Timer = micros() + Generator[channel].Period*10;
       }
     }
 
     break;
 
   default:
+
     break;
   }
 
@@ -518,4 +527,11 @@ void testFloppyDrives(){
 
 
 
-
+void BlinkLed(byte num) { 	// Basic blink function
+  for (byte i=0;i<num;i++) {
+    digitalWrite(LED,HIGH);
+    delay(50);
+    digitalWrite(LED,LOW);
+    delay(50);
+  }
+}
