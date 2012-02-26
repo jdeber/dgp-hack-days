@@ -33,11 +33,10 @@ namespace FreeFoodButton
             SourceInitialized += delegate
             {
                 HwndSource source = (HwndSource) PresentationSource.FromVisual(this);
-                source.AddHook(Hook);
+                source.AddHook(ScreenSaverHook);
             };
 
             InitializeComponent();
-
 
             //load default settings
             Settings.LoadSettings("Settings.txt");
@@ -57,7 +56,7 @@ namespace FreeFoodButton
             dispatcherTimer.Start();
         }
 
-        private static IntPtr Hook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        private static IntPtr ScreenSaverHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
             if (msg == WM_SYSCOMMAND)
             {
