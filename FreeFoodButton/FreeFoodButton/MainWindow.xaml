@@ -1,8 +1,24 @@
 ﻿<Window x:Class="FreeFoodButton.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="350" Width="525">
+        xmlns:l="clr-namespace:FreeFoodButton"
+        Name="wnd" Title="FreeFoodButton" Height="720" Width="960">
+    <Window.Resources>
+        <l:ScaleConverter x:Key="conv"/>
+        <!-- Styles -->
+        <Style x:Key="DefaultCapPlayer" TargetType="{x:Type l:CapPlayer}">
+            <Setter Property="Margin" Value="6" />
+        </Style>
+    </Window.Resources>
+    
     <Grid>
-        <Label Content="Free food button is working... or is it..." Height="50" HorizontalAlignment="Left" Margin="12,12,0,0" Name="label1" VerticalAlignment="Top" Width="479" FontSize="24" />        
+        <!-- Webcamp preview -->
+        <l:CapPlayer Grid.Row="2" x:Name="player" Stretch="Fill" 
+                              Rotation="{Binding RelativeSource={RelativeSource AncestorType={x:Type l:MainWindow}}, Path=WebcamRotation}"
+                              Height="{Binding ElementName=webcamPlayer, Path=ActualWidth}"
+                              Device="{Binding RelativeSource={RelativeSource AncestorType={x:Type l:MainWindow}}, Path=SelectedWebcam}"
+                              Style="{StaticResource DefaultCapPlayer}">
+        </l:CapPlayer>
     </Grid>
 </Window>
+    
