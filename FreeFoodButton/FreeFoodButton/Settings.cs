@@ -34,6 +34,7 @@ namespace FreeFoodButton
         static private string m_stDomain = "";
         static private string m_stBcc = "";
         static private string m_stMailServer = "";
+        static private string m_stMessage = "";
 
 
         /// <summary>
@@ -64,7 +65,8 @@ namespace FreeFoodButton
                         parts = line.Split('=');
 
                         parts[0] = parts[0].Trim();
-                        parts[1] = parts[1].Trim();
+                        //parts[1] = parts[1].Trim();
+                        parts[1] = line.Substring(line.IndexOf('=') + 1).Trim();
 
                         //check to see if the part is someting we're interested in
                         switch (parts[0].Trim())
@@ -110,6 +112,10 @@ namespace FreeFoodButton
                             case "mailserver":
                                 //stores mail server address
                                 m_stMailServer = parts[1];
+                                break;
+                            case "Message":
+                                //email message
+                                m_stMessage = parts[1];
                                 break;
                         }
                     }
@@ -253,6 +259,15 @@ namespace FreeFoodButton
                 return m_stMailServer;
             }
             set { m_stMailServer = value; }
+        }
+
+        static public string Message
+        {
+            get
+            {
+                return m_stMessage;
+            }
+            set { m_stMessage = value; }
         }
         #endregion
     }

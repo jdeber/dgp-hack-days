@@ -26,7 +26,7 @@ namespace FreeFoodButton
         private const int SC_SCREENSAVE     = 0xF140;
         private const int SC_MONITORPOWER   = 0xF170;
         private WebCam webcam;
-        private DispatcherTimer dispatcherTimer;
+        private DispatcherTimer dispatcherTimer;        
 
         public MainWindow()
         {
@@ -52,8 +52,8 @@ namespace FreeFoodButton
             webcam.Start();
             dispatcherTimer = new DispatcherTimer();
             dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
-            dispatcherTimer.Interval = new TimeSpan(0, 0, 30);
-            dispatcherTimer.Start();
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 5);
+            dispatcherTimer.Start();           
         }
 
         private static IntPtr ScreenSaverHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)

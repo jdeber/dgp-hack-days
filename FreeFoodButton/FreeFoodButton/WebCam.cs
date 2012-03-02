@@ -14,30 +14,49 @@ namespace FreeFoodButton
         //Block Memory Leak
         [System.Runtime.InteropServices.DllImport("gdi32.dll")]
         public static extern bool DeleteObject(IntPtr handle);
-        string m_Filename = "TestImage.jpg";
+        string m_Filename = "C:\\inetpub\\wwwroot\\FreeFood\\Food.jpg"; //"test.jpg";  //
 
         private WebCamCapture webcam;
         private int FrameNumber = 30;        
-        BitmapSource mBitmapSource;
+        //BitmapSource mBitmapSource;
+        System.Drawing.Bitmap mBitmap;
 
         public void Start()
         {
             webcam = new WebCamCapture();
             webcam.FrameNumber = ((ulong)(0ul));
             webcam.TimeToCapture_milliseconds = FrameNumber;
-            webcam.ImageCaptured += new WebCamCapture.WebCamEventHandler(webcam_ImageCaptured);
+            webcam.CaptureHeight = 600;
+            webcam.CaptureWidth = 800;
+            webcam.ImageCaptured += new WebCamCapture.WebCamEventHandler(webcam_ImageCaptured);            
             webcam.Start(0);
-
+            
             Log.Write("camera started.");
         }
 
         void webcam_ImageCaptured(object source, WebcamEventArgs e)
         {
-            IntPtr ip = ((System.Drawing.Bitmap)e.WebCamImage).GetHbitmap();
+            bool ErrorLogged = false;
+            /*IntPtr ip = ((System.Drawing.Bitmap)e.WebCamImage).GetHbitmap();
             mBitmapSource = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(ip, IntPtr.Zero, System.Windows.Int32Rect.Empty,
                             System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
 
-            DeleteObject(ip);         
+            DeleteObject(ip);         */
+            
+            try
+            {
+                mBitmap = ((System.Drawing.Bitmap)e.WebCamImage);
+                ErrorLogged = false;
+            }
+            catch
+            {
+                if (!ErrorLogged)
+                {
+                    Log.Write("Error in image capture");
+                    ErrorLogged = true;
+                }
+            }
+
         }
 
         public void SaveImage()
@@ -45,12 +64,28 @@ namespace FreeFoodButton
             try
             {
                 JpegBitmapEncoder encoder = new JpegBitmapEncoder();
-                encoder.Frames.Add(BitmapFrame.Create(mBitmapSource));
-                encoder.QualityLevel = 100;
+                //encoder.Frames.Add(BitmapFrame.Create(mBitmapSource));
+                
+                IntPtr ip = mBitmap.GetHbitmap();
+                try
+                {
+                    var source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(ip, IntPtr.Zero, System.Windows.Int32Rect.Empty, System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
 
-                FileStream fstream = new FileStream(m_Filename, FileMode.Create);
-                encoder.Save(fstream);
-                fstream.Close();
+                    encoder.Frames.Add(BitmapFrame.Create(source));
+                    encoder.QualityLevel = 100;
+
+
+                    FileStream fstream = new FileStream(m_Filename, FileMode.Create);
+                    encoder.Save(fstream);
+                    fstream.Close();
+                    fstream.Dispose();
+                    fstream = null;
+                }
+                finally
+                {                    
+                    DeleteObject(ip);                    
+                    encoder = null;                    
+                }
             }
             catch 
             {
@@ -61,7 +96,7 @@ namespace FreeFoodButton
 
         public void Stop()
         {
-            webcam.Stop();
+            webcam.Stop();            
             Log.Write("camera stopped.");
         }
 

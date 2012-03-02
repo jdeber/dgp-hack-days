@@ -88,7 +88,8 @@ namespace FreeFoodButton
                 )      
                 {
                     //TODO add link
-                    Email.SendEmail(Settings.Email, "Free Food", "Free food in the DGP lounge!");
+                    
+                    Email.SendEmail(Settings.Email, "Free Food", Settings.Message);
                     OnKeyPressed(new EventArgs());
                     return new IntPtr(1);
                 }

@@ -3,6 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MainWindow" Height="350" Width="525">
     <Grid>
-        <Label Content="Free food button is working... or is it..." Height="50" HorizontalAlignment="Left" Margin="12,12,0,0" Name="label1" VerticalAlignment="Top" Width="479" FontSize="24" />
+        <Label Content="Free food button is working... or is it..." Height="50" HorizontalAlignment="Left" Margin="12,12,0,0" Name="label1" VerticalAlignment="Top" Width="479" FontSize="24" />        
     </Grid>
 </Window>
