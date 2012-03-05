@@ -253,6 +253,28 @@ namespace FreeFoodButton
         int SetCallback(ISampleGrabberCB callback, int whichMethodToCallback);
     }
 
+    [ComImport, Guid("C6E13340-30AC-11D0-A18C-00A0C9118956"),InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    internal interface IAMStreamConfig
+    {
+        [PreserveSig]
+        int SetFormat([In, MarshalAs(UnmanagedType.LPStruct)] AMMediaType pmt);
+
+        [PreserveSig]
+        int GetFormat([Out, MarshalAs(UnmanagedType.LPStruct)] out AMMediaType pmt);
+
+        [PreserveSig]
+        int GetNumberOfCapabilities(
+        [Out] out int piCount,
+        [Out] out int piSize);
+
+        [PreserveSig]
+        int GetStreamCaps(
+        [In] int iIndex,
+        [Out] out IntPtr ppmt,
+        [In] IntPtr pSCC
+        );
+    }
+
     [ComImport, Guid("0579154A-2B53-4994-B0D0-E773148EFF85"),InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     internal interface ISampleGrabberCB
     {

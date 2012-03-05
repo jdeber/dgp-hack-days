@@ -91,18 +91,11 @@ namespace FreeFoodButton
         #endregion
 
         #region Variables
-        private ManualResetEvent _stopSignal = null;
+        private AutoResetEvent _stopSignal = null;
         private Thread _worker = null;
-        private IGraphBuilder _graph = null;
-        private ISampleGrabber _grabber = null;
-        private IBaseFilter _sourceObject = null;
-        private IBaseFilter _grabberObject = null;
-        private IMediaControl _control = null;
         private CapGrabber _capGrabber = null;
-        private IntPtr _map = IntPtr.Zero;
-        private IntPtr _section = IntPtr.Zero;
 
-        private System.Diagnostics.Stopwatch _timer = System.Diagnostics.Stopwatch.StartNew();
+        private Stopwatch _timer = Stopwatch.StartNew();
         private double _frames = 0.0;
         private string _monikerString = "";
         #endregion
@@ -128,7 +121,7 @@ namespace FreeFoodButton
             if (Application.Current != null)
             {
                 // Application, subscribe to exit event so we can shut down
-                Application.Current.Exit += new ExitEventHandler(CurrentApplication_Exit);
+                Application.Current.Exit += CurrentApplication_Exit;
             }
         }
 
@@ -139,6 +132,9 @@ namespace FreeFoodButton
         {
             // Stop
             Stop();
+
+            if (Application.Current != null && !IsRunning)
+                Application.Current.Exit -= CurrentApplication_Exit;
         }
         #endregion
 
@@ -169,7 +165,10 @@ namespace FreeFoodButton
                         int r = moniker.Next(1, ms, IntPtr.Zero);
                         if (r != 0 || ms[0] == null)
                             break;
-                        filters.Add(new FilterInfo(ms[0]));
+                        FilterInfo lFilterInfo = new FilterInfo(ms[0]);
+                        //Add if Name Not Empty
+                        if (!string.IsNullOrEmpty(lFilterInfo.Name))
+                            filters.Add(lFilterInfo);
                         Marshal.ReleaseComObject(ms[0]);
                         ms[0] = null;
                     }
@@ -263,7 +262,8 @@ namespace FreeFoodButton
                 if (_worker == null) return false;
 
                 // Check if we can join the thread
-                if (_worker.Join(0) == false) return true;
+                if (_worker.Join(0) == false) 
+                    return true;
 
                 // Release
                 Release();
@@ -347,6 +347,9 @@ namespace FreeFoodButton
             {
                 try
                 {
+                    IntPtr _map = IntPtr.Zero;
+                    IntPtr _section = IntPtr.Zero;
+
                     if ((_capGrabber.Width != default(int)) && (_capGrabber.Height != default(int)))
                     {
                         // Get the pixel count
@@ -434,11 +437,11 @@ namespace FreeFoodButton
 
             // Create new grabber
             _capGrabber = new CapGrabber();
-            _capGrabber.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(capGrabber_PropertyChanged);
-            _capGrabber.NewFrameArrived += new EventHandler(capGrabber_NewFrameArrived);
+            _capGrabber.PropertyChanged += capGrabber_PropertyChanged;
+            _capGrabber.NewFrameArrived += capGrabber_NewFrameArrived;
 
             // Create manual reset event
-            _stopSignal = new ManualResetEvent(false);
+            _stopSignal = new AutoResetEvent(false);
 
             // Start the thread
             _worker = new Thread(RunWorker);
@@ -458,12 +461,13 @@ namespace FreeFoodButton
                     // Yes, stop via the event
                     _stopSignal.Set();
 
-                    // Abort the thread
-                    _worker.Abort();
+                    // Abort the thread (Mauvaise idée empèche la caméra de s'arreter)
+                    //_worker.Abort();
+
                     if (_worker != null)
                     {
                         // Join
-                        _worker.Join();
+                        _worker.Join(500);
 
                         // Release
                         Release();
@@ -491,17 +495,18 @@ namespace FreeFoodButton
             // Clear the event
             if (_stopSignal != null)
             {
-                _stopSignal.Close();
+                _stopSignal.Set();
+                //_Signal.Close();
                 _stopSignal = null;
             }
 
             // Clean up
-            _graph = null;
-            _sourceObject = null;
-            _grabberObject = null;
-            _grabber = null;
+            //_graph = null;
+            //_sourceObject = null;
+            //_grabberObject = null;
+            //_grabber = null;
             _capGrabber = null;
-            _control = null;
+            //_control = null;
         }
 
         /// <summary>
@@ -511,11 +516,37 @@ namespace FreeFoodButton
         {
             try
             {
+                IGraphBuilder _graph = null;
+                ISampleGrabber _grabber = null;
+                IBaseFilter _sourceObject = null;
+                IBaseFilter _grabberObject = null;
+                IMediaControl _control = null;
+
                 // Create the main graph
                 _graph = Activator.CreateInstance(Type.GetTypeFromCLSID(FilterGraph)) as IGraphBuilder;
 
                 // Create the webcam source
                 _sourceObject = FilterInfo.CreateFilter(_monikerString);
+
+                //Try to set the resolution
+                IEnumPins _enumPin;
+                _sourceObject.EnumPins(out _enumPin);
+                IPin[] _IPP = new IPin[3];
+                int pt = -1;
+                _enumPin.Next(3, _IPP, out pt);
+
+                IAMStreamConfig st;
+                st = (IAMStreamConfig)_IPP[0];
+
+                AMMediaType med = new AMMediaType();
+                st.GetFormat(out med);
+                VideoInfoHeader head = (VideoInfoHeader)Marshal.PtrToStructure(med.FormatPtr, typeof(VideoInfoHeader));
+
+                head.BmiHeader.Width = 960;
+                head.BmiHeader.Height = 720;
+
+                Marshal.StructureToPtr(head, med.FormatPtr, false);
+                st.SetFormat(med);
 
                 // Create the grabber
                 _grabber = Activator.CreateInstance(Type.GetTypeFromCLSID(SampleGrabber)) as ISampleGrabber;
@@ -553,11 +584,10 @@ namespace FreeFoodButton
                                     // Succeeded
                                     succeeded = true;
                                 }
-                                catch (Exception retryException)
+                                catch (Exception)
                                 {
                                     // Trace
                                     Trace.TraceInformation("Failed to retrieve the grabber information, tried {0} time(s)", retryCount);
-                                    Trace.TraceInformation(retryException.ToString());
 
                                     // Sleep
                                     Thread.Sleep(50);
@@ -578,14 +608,12 @@ namespace FreeFoodButton
                     // Create the control and run
                     _control = (IMediaControl)_graph;
                     _control.Run();
-
+                    
                     // Wait for the stop signal
-                    while (!_stopSignal.WaitOne(0, true))
-                    {
-                        Thread.Sleep(10);
-                    }
+                    _stopSignal.WaitOne();
 
                     // Stop when ready
+                    //_control.Stop();
                     _control.StopWhenReady();
                 }
             }
