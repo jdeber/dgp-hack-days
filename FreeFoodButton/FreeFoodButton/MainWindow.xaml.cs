@@ -155,7 +155,8 @@ namespace FreeFoodButton
         {
             using (var fileStream = new FileStream(m_filename, FileMode.Create))
             {
-                BitmapEncoder encoder = new PngBitmapEncoder();
+                JpegBitmapEncoder encoder = new JpegBitmapEncoder();
+                encoder.FlipHorizontal = true; 
                 encoder.Frames.Add(BitmapFrame.Create(player.CurrentBitmap));
                 encoder.Save(fileStream);
                 encoder = null;
