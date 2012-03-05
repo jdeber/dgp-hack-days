@@ -167,7 +167,8 @@ namespace FreeFoodButton
             //webcam.Stop();
             dispatcherTimer.Stop();
             base.OnClosed(e);
-        }
+        }        
+
     }
 
     internal static class NativeMethods
