@@ -53,6 +53,8 @@ namespace FreeFoodButton
     /// </summary>
     static class Email
     {
+        public static string EMAIL_IMAGE_PATH = "resized_food.jpg";
+
         //array to store list of already sent
         static private ArrayList m_MessageList = new ArrayList();
 
@@ -172,6 +174,13 @@ namespace FreeFoodButton
             message.Subject = Subject;
             message.Body = Body;
             message.IsBodyHtml = true;
+
+            //Add the image
+            LinkedResource capture = new LinkedResource(Email.EMAIL_IMAGE_PATH, "image/jpeg");
+            capture.ContentId = "food";            
+            AlternateView av1 = AlternateView.CreateAlternateViewFromString(message.Body, null, System.Net.Mime.MediaTypeNames.Text.Html);
+            av1.LinkedResources.Add(capture);
+            message.AlternateViews.Add(av1);
 
             if (!Settings.Debug)
             {
