@@ -27,8 +27,9 @@ namespace FreeFoodButton
         private const int WM_SYSCOMMAND     = 0x112;
         private const int SC_SCREENSAVE     = 0xF140;
         private const int SC_MONITORPOWER   = 0xF170;
+        private const int ImageRefreshRate  = 10;
         private DispatcherTimer dispatcherTimer;
-        private string m_filename = "C:\\inetpub\\wwwroot\\FreeFood\\Food.jpg";
+        public static string m_filename = "C:\\inetpub\\wwwroot\\FreeFood\\Food.jpg";
 
         public MainWindow()
         {
@@ -49,13 +50,16 @@ namespace FreeFoodButton
 
             Log.Write("Program Starting", Log.Categories.System);
 
+            //so we know who's going to get emailed
+            this.Title += " - " + Settings.Email;
+
             //Web cam code
             // Create default device
             SelectedWebcamMonikerString = (CapDevice.DeviceMonikers.Length > 0) ? CapDevice.DeviceMonikers[0].MonikerString : "";
 
             dispatcherTimer = new DispatcherTimer();
             dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
-            dispatcherTimer.Interval = new TimeSpan(0, 0, 5);
+            dispatcherTimer.Interval = new TimeSpan(0, 0, ImageRefreshRate);
             dispatcherTimer.Start();           
         }
 
@@ -153,13 +157,21 @@ namespace FreeFoodButton
 
         private void dispatcherTimer_Tick(object sender, EventArgs e)
         {
-            using (var fileStream = new FileStream(m_filename, FileMode.Create))
+            try
             {
-                JpegBitmapEncoder encoder = new JpegBitmapEncoder();
-                encoder.FlipHorizontal = true; 
-                encoder.Frames.Add(BitmapFrame.Create(player.CurrentBitmap));
-                encoder.Save(fileStream);
-                encoder = null;
+                using (var fileStream = new FileStream(m_filename, FileMode.Create))
+                {
+                    JpegBitmapEncoder encoder = new JpegBitmapEncoder();
+                    encoder.FlipHorizontal = true;
+                    encoder.QualityLevel = 90;
+                    encoder.Frames.Add(BitmapFrame.Create(player.CurrentBitmap));
+                    encoder.Save(fileStream);
+                    encoder = null;
+                }
+            }
+            catch (Exception error)
+            {
+                Console.WriteLine(error.Message);
             }
         }
 
